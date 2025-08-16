@@ -1,0 +1,12 @@
+D:\ProgramFiles\FakeNewsDetector\java_backend\src\main\java\com\fakenews\detector\Application.java
+D:\ProgramFiles\FakeNewsDetector\java_backend\src\main\java\com\fakenews\detector\entity\Query.java
+D:\ProgramFiles\FakeNewsDetector\java_backend\src\main\java\com\fakenews\detector\entity\User.java
+D:\ProgramFiles\FakeNewsDetector\java_backend\src\main\java\com\fakenews\detector\service\QueryService.java
+D:\ProgramFiles\FakeNewsDetector\java_backend\src\main\java\com\fakenews\detector\controller\AuthController.java
+D:\ProgramFiles\FakeNewsDetector\java_backend\src\main\java\com\fakenews\detector\controller\NewsController.java
+D:\ProgramFiles\FakeNewsDetector\java_backend\src\main\java\com\fakenews\detector\repository\UserRepository.java
+D:\ProgramFiles\FakeNewsDetector\java_backend\src\main\java\com\fakenews\detector\config\SecurityConfig.java
+D:\ProgramFiles\FakeNewsDetector\java_backend\src\main\java\com\fakenews\detector\service\MLServiceClient.java
+D:\ProgramFiles\FakeNewsDetector\java_backend\src\main\java\com\fakenews\detector\config\CorsConfig.java
+D:\ProgramFiles\FakeNewsDetector\java_backend\src\main\java\com\fakenews\detector\service\UserService.java
+D:\ProgramFiles\FakeNewsDetector\java_backend\src\main\java\com\fakenews\detector\repository\QueryRepository.java

@@ -1,0 +1,14 @@
+# Python ML Service Dependencies
+flask==2.3.3
+flask-cors==4.0.0
+pandas==2.1.1
+numpy==1.24.3
+scikit-learn==1.3.0
+nltk==3.8.1
+requests==2.31.0
+python-dotenv==1.0.0
+gunicorn==21.2.0
+
+# Optional: For more advanced NLP
+# textblob==0.17.1
+# spacy==3.6.1

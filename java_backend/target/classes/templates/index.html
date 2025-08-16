@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake News Detector</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: url('/images/medical-ice-bg.jpg') no-repeat center center fixed;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .btn-danger {
+            background: #e53e3e;
+        }
+
+        .btn-danger:hover {
+            background: #c53030;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea.form-input {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background-color: #f0fff4;
+            border: 1px solid #9ae6b4;
+            color: #2d7738;
+        }
+
+        .alert-error {
+            background-color: #fed7d7;
+            border: 1px solid #fc8181;
+            color: #c53030;
+        }
+
+        .alert-info {
+            background-color: #ebf8ff;
+            border: 1px solid #90cdf4;
+            color: #2c5282;
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-left: 5px solid #667eea;
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .result-fake {
+            border-left-color: #e53e3e;
+            background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
+        }
+
+        .result-real {
+            border-left-color: #38a169;
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .result-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .confidence-bar {
+            background-color: #e2e8f0;
+            border-radius: 10px;
+            height: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .history-item {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .history-prediction {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        .history-fake {
+            color: #e53e3e;
+        }
+
+        .history-real {
+            color: #38a169;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            flex: 1;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #718096;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">🕵️ Medical Lens</div>
+        <div class="user-info">
+            <span id="welcomeMessage">Welcome, Guest!</span>
+            <button id="authBtn" class="btn">Login</button>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="hidden">
+        <div class="card">
+            <h2 id="authTitle">Login</h2>
+            <div id="authAlert"></div>
+
+            <form id="authForm">
+                <div id="emailGroup" class="form-group hidden">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" id="email" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" id="username" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" class="form-input" required>
+                </div>
+
+                <button type="submit" id="authSubmit" class="btn">Login</button>
+                <button type="button" id="toggleAuth" class="btn btn-secondary">Switch to Register</button>
+                <button type="button" id="cancelAuth" class="btn btn-secondary">Cancel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" class="grid">
+        <!-- Analysis Section -->
+        <div>
+            <div class="card">
+                <h2>📰 Analyze News Article</h2>
+                <p style="color: #718096; margin-bottom: 20px;">
+                    Paste your news article text below to check if it might be fake or real.
+                </p>
+
+                <div id="analysisAlert"></div>
+
+                <form id="analysisForm">
+                    <div class="form-group">
+                        <label for="articleText" class="form-label">News Article Text</label>
+                        <textarea
+                                id="articleText"
+                                class="form-input"
+                                placeholder="Paste your news article text here..."
+                                required
+                                minlength="10"
+                                maxlength="10000"
+                        ></textarea>
+                        <small style="color: #718096;">Minimum 10 characters, maximum 10,000 characters</small>
+                    </div>
+
+                    <button type="submit" class="btn">🔍 Analyze Article</button>
+                </form>
+
+                <div id="loadingAnalysis" class="loading hidden">
+                    <div class="spinner"></div>
+                    <p>Analyzing article with AI...</p>
+                </div>
+
+                <div id="analysisResult" class="hidden"></div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div>
+            <!-- System Status -->
+            <div class="card">
+                <h3>🔧 System Status</h3>
+                <div id="systemStatus">
+                    <div style="margin: 10px 0;">
+                        <strong>Backend:</strong> <span id="backendStatus">Checking...</span>
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <strong>ML Service:</strong> <span id="mlStatus">Checking...</span>
+                    </div>
+                </div>
+                <button onclick="checkSystemHealth()" class="btn btn-secondary" style="width: 100%;">
+                    Refresh Status
+                </button>
+            </div>
+
+            <!-- History Section -->
+            <div class="card">
+                <h3>📈 Recent Analysis</h3>
+                <div id="historyContent">
+                    <p style="color: #718096;">Login to see your analysis history</p>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="card">
+                <h3>📊 Your Stats</h3>
+                <div id="userStats" class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalAnalyses">0</div>
+                        <div class="stat-label">Total Analyses</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="fakeCount">0</div>
+                        <div class="stat-label">Fake Detected</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="realCount">0</div>
+                        <div class="stat-label">Real Detected</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Global state
+    let currentUser = null;
+    let isAuthMode = 'login';
+
+    // API Configuration - ONLY CHANGE: Updated port from 8080 to 8000
+    const API_BASE = '/api';
+
+    // Initialize app
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('App initialized, checking auth status...');
+        checkAuthStatus();
+        checkSystemHealth();
+        setupEventListeners();
+    });
+
+    function setupEventListeners() {
+        // Auth events
+        document.getElementById('authBtn').addEventListener('click', showAuthModal);
+        document.getElementById('authForm').addEventListener('submit', handleAuthSubmit);
+        document.getElementById('toggleAuth').addEventListener('click', toggleAuthMode);
+        document.getElementById('cancelAuth').addEventListener('click', hideAuthModal);
+
+        // Analysis events
+        document.getElementById('analysisForm').addEventListener('submit', handleAnalysisSubmit);
+    }
+
+    // Authentication functions
+    async function checkAuthStatus() {
+        try {
+            console.log('Checking authentication status...');
+            const response = await fetch(`${API_BASE}/auth/me`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            console.log('Auth check response status:', response.status);
+            const data = await response.json();
+            console.log('Auth check data:', data);
+
+            if (response.ok && data.authenticated) {
+                currentUser = data.user;
+                updateUI(true);
+                loadUserHistory();
+                console.log('User authenticated:', currentUser.username);
+            } else {
+                updateUI(false);
+                console.log('User not authenticated');
+            }
+        } catch (error) {
+            console.error('Auth check failed:', error);
+            updateUI(false);
+        }
+    }
+
+    function updateUI(isAuthenticated) {
+        const welcomeMsg = document.getElementById('welcomeMessage');
+        const authBtn = document.getElementById('authBtn');
+
+        if (isAuthenticated && currentUser) {
+            welcomeMsg.textContent = `Welcome, ${currentUser.username}!`;
+            authBtn.textContent = 'Logout';
+            authBtn.onclick = logout;
+            authBtn.className = 'btn btn-danger';
+        } else {
+            welcomeMsg.textContent = 'Welcome, Guest!';
+            authBtn.textContent = 'Login';
+            authBtn.onclick = showAuthModal;
+            authBtn.className = 'btn';
+            document.getElementById('historyContent').innerHTML =
+                '<p style="color: #718096;">Login to see your analysis history</p>';
+            resetStats();
+        }
+    }
+
+    function showAuthModal() {
+        document.getElementById('authModal').classList.remove('hidden');
+        document.getElementById('mainContent').style.opacity = '0.3';
+    }
+
+    function hideAuthModal() {
+        document.getElementById('authModal').classList.add('hidden');
+        document.getElementById('mainContent').style.opacity = '1';
+        document.getElementById('authAlert').innerHTML = '';
+    }
+
+    function toggleAuthMode() {
+        const isLogin = isAuthMode === 'login';
+        isAuthMode = isLogin ? 'register' : 'login';
+
+        document.getElementById('authTitle').textContent = isLogin ? 'Register' : 'Login';
+        document.getElementById('authSubmit').textContent = isLogin ? 'Register' : 'Login';
+        document.getElementById('toggleAuth').textContent = isLogin ? 'Switch to Login' : 'Switch to Register';
+
+        const emailGroup = document.getElementById('emailGroup');
+        const emailInput = document.getElementById('email');
+
+        if (isLogin) {
+            emailGroup.classList.remove('hidden');
+            emailInput.setAttribute('required', 'true');
+        } else {
+            emailGroup.classList.add('hidden');
+            emailInput.removeAttribute('required');
+            emailInput.value = '';
+        }
+    }
+
+    async function handleAuthSubmit(e) {
+e.preventDefault();
+
+const username = document.getElementById('username').value.trim();
+const password = document.getElementById('password').value.trim();
+const email = document.getElementById('email').value.trim();
+
+console.log('Attempting', isAuthMode, 'for user:', username);
+
+// Validate inputs
+if (!username || !password) {
+    showAlert('authAlert', 'Username and password are required', 'error');
+    return;
+}
+
+if (isAuthMode === 'register' && !email) {
+    showAlert('authAlert', 'Email is required for registration', 'error');
+    return;
+}
+
+const endpoint = isAuthMode === 'login' ? '/auth/login' : '/auth/register';
+const payload = isAuthMode === 'login'
+    ? { username, password }
+    : { username, password, email };
+
+try {
+    console.log('Sending request to:', `${API_BASE}${endpoint}`);
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+    });
+
+    console.log('Response status:', response.status);
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+    const data = await response.json();
+    console.log('Response data:', data);
+
+    if (response.ok && data.success) {
+        currentUser = data.user;
+        showAlert('authAlert', data.message, 'success');
+
+        // Clear form
+        document.getElementById('authForm').reset();
+
+        setTimeout(() => {
+            hideAuthModal();
+            updateUI(true);
+
+            // Wait a bit more before loading history to ensure session is set
+            setTimeout(() => {
+                loadUserHistory();
+            }, 500);
+        }, 1500);
+    } else {
+        const errorMessage = data.error || data.message || `Server error: ${response.status}`;
+        showAlert('authAlert', errorMessage, 'error');
+        console.error('Auth error:', response.status, data);
+    }
+} catch (error) {
+    console.error('Network/fetch error:', error);
+    showAlert('authAlert', 'Network error. Please check if the server is running at http://localhost:8080', 'error');
+}
+}
+
+    async function logout() {
+        try {
+            await fetch(`${API_BASE}/auth/logout`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+            currentUser = null;
+            updateUI(false);
+            console.log('User logged out');
+        } catch (error) {
+            console.error('Logout failed:', error);
+            // Still update UI even if logout request fails
+            currentUser = null;
+            updateUI(false);
+        }
+    }
+
+    // Analysis functions
+    async function handleAnalysisSubmit(e) {
+        e.preventDefault();
+
+        console.log('Analysis requested, current user:', currentUser);
+
+        const articleText = document.getElementById('articleText').value.trim();
+
+        if (articleText.length < 10) {
+            showAlert('analysisAlert', 'Article text must be at least 10 characters long', 'error');
+            return;
+        }
+
+        // Check authentication first
+        if (!currentUser) {
+            showAlert('analysisAlert', 'Please login first to analyze articles', 'error');
+            showAuthModal();
+            return;
+        }
+
+        showLoading(true);
+
+        try {
+            console.log('Sending analysis request...');
+            const response = await fetch(`${API_BASE}/news/analyze`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({ text: articleText })
+            });
+
+            console.log('Analysis response status:', response.status);
+
+            if (response.status === 401) {
+                // Session expired
+                console.log('Session expired, user needs to login again');
+                currentUser = null;
+                updateUI(false);
+                showAlert('analysisAlert', 'Your session has expired. Please login again.', 'error');
+                showAuthModal();
+                return;
+            }
+
+            const data = await response.json();
+            console.log('Analysis response data:', data);
+
+            if (response.ok && data.success) {
+// Pass both ML result and chatbot data
+displayAnalysisResult(data.result, data.chatbot,data.relatedNews);
+loadUserHistory();
+
+// Clear the textarea after successful analysis
+document.getElementById('articleText').value = '';
+} else {
+                showAlert('analysisAlert', data.error || 'Analysis failed', 'error');
+            }
+        } catch (error) {
+            console.error('Analysis error:', error);
+            showAlert('analysisAlert', 'Analysis failed. Please check your connection and try again.', 'error');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+function displayAnalysisResult(result, chatbotData = null,relatedNews=null) {
+const resultDiv = document.getElementById('analysisResult');
+const prediction = result.prediction;
+const confidence = result.confidence;
+
+const isFake = prediction === 'fake';
+const resultClass = isFake ? 'result-fake' : 'result-real';
+const icon = isFake ? '❌' : '✅';
+const iconColor = isFake ? '#e53e3e' : '#38a169';
+const confidenceColor = isFake ? '#e53e3e' : '#38a169';
+
+// Build chatbot section HTML
+let chatbotHTML = '';
+if (chatbotData) {
+    if (chatbotData.response) {
+        // Build sources HTML if available
+        let sourcesHTML = '';
+        if (chatbotData.sources && chatbotData.sources.length > 0) {
+            sourcesHTML = `
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.1);">
+                    <h5 style="margin: 0 0 10px 0; color: #4a5568; font-size: 14px;">📰 Related Current Sources:</h5>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+            `;
+
+            chatbotData.sources.forEach((source, index) => {
+                sourcesHTML += `
+                    <div style="background: rgba(102, 126, 234, 0.05); padding: 10px; border-radius: 6px; border-left: 3px solid #667eea;">
+                        <div style="font-weight: 500; color: #2d3748; font-size: 13px; margin-bottom: 4px;">
+                            ${index + 1}. ${source.source}
+                        </div>
+                        <div style="color: #4a5568; font-size: 12px; margin-bottom: 6px; line-height: 1.4;">
+                            ${source.title}
+                        </div>
+                        <a href="${source.url}" target="_blank" rel="noopener noreferrer"
+                           style="color: #667eea; font-size: 11px; text-decoration: none;">
+                            🔗 Read Full Article
+                        </a>
+                    </div>
+                `;
+            });
+
+            sourcesHTML += `
+                    </div>
+                </div>
+            `;
+        }
+
+        chatbotHTML = `
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid rgba(0,0,0,0.1);">
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <div style="width: 35px; height: 35px; border-radius: 50%; background: #667eea;
+                               display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                        <span style="color: white; font-size: 16px;">🤖</span>
+                    </div>
+                    <h4 style="margin: 0; color: #4a5568;">AI Context & Analysis</h4>
+                </div>
+                <div style="background: rgba(102, 126, 234, 0.1); padding: 15px; border-radius: 8px;
+                           border-left: 4px solid #667eea; line-height: 1.6; color: #2d3748;">
+                    ${chatbotData.response.replace(/\n/g, '<br>')}
+                </div>
+                ${sourcesHTML}
+            </div>
+        `;
+    } else if (chatbotData.error) {
+        chatbotHTML = `
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid rgba(0,0,0,0.1);">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <span style="color: #e53e3e; margin-right: 8px;">⚠️</span>
+                    <small style="color: #718096;">AI Context unavailable: ${chatbotData.error}</small>
+                </div>
+            </div>
+        `;
+    }
+}
+
+resultDiv.innerHTML = `
+    <div class="result-card ${resultClass}">
+        <div class="result-header">
+            <div class="result-icon" style="background-color: ${iconColor}; color: white;">
+                ${icon}
+            </div>
+            <div>
+                <h3 style="margin: 0; color: ${iconColor};">
+                    ${prediction.toUpperCase()}
+                </h3>
+                <p style="margin: 5px 0 0 0; color: #666;">
+                    AI Prediction Result
+                </p>
+            </div>
+        </div>
+
+        <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                <span>Confidence Score</span>
+                <span><strong>${(confidence * 100).toFixed(1)}%</strong></span>
+            </div>
+            <div class="confidence-bar">
+                <div class="confidence-fill"
+                     style="width: ${confidence * 100}%; background-color: ${confidenceColor};">
+                </div>
+            </div>
+        </div>
+
+        ${chatbotHTML}
+        ${relatedNews && relatedNews.length > 0 ? `
+    <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid rgba(0,0,0,0.1);">
+        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+            <div style="width: 35px; height: 35px; border-radius: 50%; background: #38a169;
+                        display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+                <span style="color: white; font-size: 16px;">📰</span>
+            </div>
+            <h4 style="margin: 0; color: #4a5568;">Related News Articles</h4>
+        </div>
+        <div style="background: rgba(56, 161, 105, 0.1); padding: 15px; border-radius: 8px;
+                    border-left: 4px solid #38a169;">
+            ${relatedNews.map((url, index) => `
+                <div style="margin-bottom: 10px; padding: 8px; background: white;
+                            border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <a href="${url}" target="_blank" style="color: #2c5282;
+                              text-decoration: none; font-weight: 500;">
+                        📄 Related Article ${index + 1}
+                    </a>
+                    <small style="color: #666; font-size: 11px;">${url}</small>
+                </div>
+            `).join("")}
+        </div>
+    </div>
+` : ""}
+
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.1);">
+            <small style="color: #666;">
+                <strong>Note:</strong> This is an AI prediction and should not be the only factor
+                in determining news authenticity. Always verify with multiple reliable sources.
+            </small>
+        </div>
+    </div>
+`;
+
+resultDiv.classList.remove('hidden');
+}
+
+    function showLoading(show) {
+        const loading = document.getElementById('loadingAnalysis');
+        const form = document.getElementById('analysisForm');
+
+        if (show) {
+            loading.classList.remove('hidden');
+            form.style.opacity = '0.5';
+        } else {
+            loading.classList.add('hidden');
+            form.style.opacity = '1';
+        }
+    }
+
+    // History functions
+    async function loadUserHistory() {
+        if (!currentUser) return;
+
+        try {
+            console.log('Loading user history...');
+            const response = await fetch(`${API_BASE}/news/history`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status === 401) {
+                // Session expired
+                currentUser = null;
+                updateUI(false);
+                return;
+            }
+
+            const data = await response.json();
+            console.log('History data:', data);
+
+            if (response.ok && data.success) {
+                displayHistory(data.history);
+                updateStats(data.history);
+            }
+        } catch (error) {
+            console.error('Failed to load history:', error);
+        }
+    }
+
+    function displayHistory(history) {
+        const historyDiv = document.getElementById('historyContent');
+
+        if (history.length === 0) {
+            historyDiv.innerHTML = '<p style="color: #718096;">No analysis history yet</p>';
+            return;
+        }
+
+        const historyHTML = history.map(item => {
+            const predClass = item.prediction === 'fake' ? 'history-fake' : 'history-real';
+            const date = new Date(item.createdAt).toLocaleDateString();
+
+            return `
+                <div class="history-item">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span class="history-prediction ${predClass}">${item.prediction.toUpperCase()}</span>
+                        <small style="color: #666;">${date}</small>
+                    </div>
+                    <p style="font-size: 14px; color: #4a5568; margin: 0;">
+                        ${item.text}
+                    </p>
+                    <div style="margin-top: 5px;">
+                        <small style="color: #666;">Confidence: ${(item.confidence * 100).toFixed(1)}%</small>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        historyDiv.innerHTML = historyHTML;
+    }
+
+    function updateStats(history) {
+        const total = history.length;
+        const fake = history.filter(h => h.prediction === 'fake').length;
+        const real = history.filter(h => h.prediction === 'real').length;
+
+        document.getElementById('totalAnalyses').textContent = total;
+        document.getElementById('fakeCount').textContent = fake;
+        document.getElementById('realCount').textContent = real;
+    }
+
+    function resetStats() {
+        document.getElementById('totalAnalyses').textContent = '0';
+        document.getElementById('fakeCount').textContent = '0';
+        document.getElementById('realCount').textContent = '0';
+    }
+
+    // System health functions
+    async function checkSystemHealth() {
+        try {
+            const response = await fetch(`${API_BASE}/news/health`);
+            const data = await response.json();
+
+            document.getElementById('backendStatus').textContent =
+                data.backend === 'healthy' ? '✅ Online' : '❌ Offline';
+            document.getElementById('backendStatus').style.color =
+                data.backend === 'healthy' ? '#38a169' : '#e53e3e';
+
+            document.getElementById('mlStatus').textContent =
+                data.mlService ? '✅ Online' : '❌ Offline';
+            document.getElementById('mlStatus').style.color =
+                data.mlService ? '#38a169' : '#e53e3e';
+        } catch (error) {
+            document.getElementById('backendStatus').textContent = '❌ Offline';
+            document.getElementById('backendStatus').style.color = '#e53e3e';
+            document.getElementById('mlStatus').textContent = '❌ Offline';
+            document.getElementById('mlStatus').style.color = '#e53e3e';
+        }
+    }
+
+    // Utility functions
+    function showAlert(containerId, message, type) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+
+        setTimeout(() => {
+            container.innerHTML = '';
+        }, 5000);
+    }
+</script>
+</body>
+</html>

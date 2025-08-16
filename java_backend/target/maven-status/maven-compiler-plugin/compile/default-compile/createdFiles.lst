@@ -1,0 +1,12 @@
+com\fakenews\detector\entity\User.class
+com\fakenews\detector\repository\UserRepository.class
+com\fakenews\detector\controller\AuthController.class
+com\fakenews\detector\repository\QueryRepository.class
+com\fakenews\detector\Application.class
+com\fakenews\detector\config\SecurityConfig.class
+com\fakenews\detector\service\UserService.class
+com\fakenews\detector\controller\NewsController.class
+com\fakenews\detector\service\MLServiceClient.class
+com\fakenews\detector\service\QueryService.class
+com\fakenews\detector\config\CorsConfig.class
+com\fakenews\detector\entity\Query.class
